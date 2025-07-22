@@ -6,9 +6,16 @@ import { sendError, tryAction } from '@/domain/error';
 import { Automation, Email, EmailSendResponse, PostmarkEmail, Template } from '@/domain/types';
 import { NextRequest, NextResponse } from 'next/server';
 
-
+let isPending = false;
 
 export async function GET(request: NextRequest) {
+    if (isPending) {
+        console.log('[SEND] Another email send process is already running. Exiting this request.');
+        return NextResponse.json({ message: 'Already Syncing' }, { status: 200 });
+    }
+
+    isPending = true;
+
     const emails = await tryAction<Email[]>(getScheduledEmails, 'Getting the list of ready-to-send emails');
 
     if (emails.length === 0) {
@@ -57,6 +64,8 @@ export async function GET(request: NextRequest) {
 
         console.log(`[SEND] Email '${email["Email ID"]}' processing completed.`);
     }
+
+    isPending = false;
 
     return NextResponse.json({ status: 200 });
 }
