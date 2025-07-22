@@ -8,7 +8,7 @@ const AIRTABLE_TABLE_ID = process.env.AIRTABLE_TABLE_ID || '';
 
 export async function getScheduledEmails(): Promise<Email[]> {
     return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND(AND({Status} = '${READY_TO_SEND_STATUS}', {Schedule Date} <= NOW()), {Sent At} = '')`,
+        filterByFormula: `AND(AND({Status} = '${READY_TO_SEND_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute')), {Sent At} = '')`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,
