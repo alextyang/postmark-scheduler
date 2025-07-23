@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     if (emails.length === 0) {
         console.log('[SEND] No emails to send at this time.');
+        isPending = false;
         return NextResponse.json({ message: 'No emails to send.' }, { status: 200 });
     }
 
