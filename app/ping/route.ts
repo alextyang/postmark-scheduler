@@ -70,6 +70,14 @@ async function testEmails() {
 
             console.log(`\n\n[TEST] Sending email '${email["Email ID"]}'. \nSubject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
             email["Automation ID"] = TEST_AUTOMATION;
+            const sendDate = new Date(email["Schedule Date"]);
+
+            const hours = sendDate.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const hours12 = hours % 12 === 0 ? 12 : hours % 12;
+            const sendDateStr = `${sendDate.getMonth() + 1}-${sendDate.getDate()} ${hours12}${ampm}`;
+
+            email.Subject = `TEST: [${sendDateStr}] ${email.Subject}`;
 
             const automation = await tryAction<Automation>(() => getAutomationDetails(TEST_AUTOMATION), 'Getting automation details');
 
