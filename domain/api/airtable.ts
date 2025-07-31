@@ -13,7 +13,7 @@ function getHeaders() {
 export async function fetchAirtableRecords<T>(base: string, table: string, params: Record<string, string> = {}): Promise<AirtableResponse<T>> {
     const query = new URLSearchParams(params).toString();
     const url = `${AIRTABLE_API_URL}/${base}/${table}?${query}`;
-    const res = await fetch(url, { headers: getHeaders() });
+    const res = await fetch(url, { headers: getHeaders(), cache: 'no-store' });
     if (!res.ok) throw new Error(`Airtable fetch failed: ${res.statusText}`);
     return res.json();
 }
@@ -35,7 +35,7 @@ export async function fetchAllAirtableRecords<T>(base: string, table: string, pa
 
 export async function fetchAirtableRecordById<T>(base: string, table: string, id: string): Promise<AirtableRecord<T>> {
     const url = `${AIRTABLE_API_URL}/${base}/${table}/${id}`;
-    const res = await fetch(url, { headers: getHeaders() });
+    const res = await fetch(url, { headers: getHeaders(), cache: 'no-store' });
     if (!res.ok) throw new Error(`Airtable fetch by ID failed: ${res.statusText}`);
     return res.json();
 }

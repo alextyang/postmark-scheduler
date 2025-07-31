@@ -1,18 +1,27 @@
 import { FROM_EMAIL, MESSAGE_STREAM } from "../settings";
-import { Email, EmailSendResponse, PostmarkEmail } from "../types";
+import { ContactVariables, Email, EmailSendResponse, PostmarkEmail, ShortenedContact } from "../types";
+import { fillContentVariables } from "./activecampaign";
 
 
 const API_KEY = process.env.POSTMARK_API_KEY ?? '';
 
-export async function createBatchEmailArray(recipients: string[], email: Email, htmlContent: string): Promise<PostmarkEmail[]> {
-    return recipients.map(recipient => ({
-        From: FROM_EMAIL,
-        To: recipient,
-        Subject: email.Subject,
-        HtmlBody: htmlContent,
-        TextBody: '',
-        MessageStream: MESSAGE_STREAM,
-    }));
+export async function createBatchEmailArray(recipients: ShortenedContact[], email: Email, htmlContent: string, variables: ContactVariables[]): Promise<PostmarkEmail[]> {
+    return recipients.map(recipient => {
+        let variableSet = variables.find(v => v.ID === recipient.id);
+        if (!variableSet) {
+            console.warn('[WARN] No variables found for contact: ' + recipient.email);
+            variableSet = { ID: recipient.id, EMAIL: recipient.email, FIRSTNAME: recipient.firstName };
+        }
+
+        return {
+            From: FROM_EMAIL,
+            To: recipient.email,
+            Subject: email.Subject,
+            HtmlBody: fillContentVariables(htmlContent, variableSet),
+            TextBody: '',
+            MessageStream: MESSAGE_STREAM,
+        }
+    });
 }
 
 export async function sendBatchEmail(emails: PostmarkEmail[]): Promise<EmailSendResponse[]> {
