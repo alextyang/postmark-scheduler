@@ -75,7 +75,10 @@ async function testEmails() {
             const hours = sendDate.getHours();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const hours12 = hours % 12 === 0 ? 12 : hours % 12;
-            const sendDateStr = `${sendDate.getMonth() + 1}-${sendDate.getDate()} ${hours12}${ampm}`;
+            let sendDateStr = `${sendDate.getMonth() + 1}-${sendDate.getDate()} ${hours12}${ampm}`;
+
+            if (sendDate < new Date())
+                sendDateStr = `ASAP`;
 
             email.Subject = `TEST: [${sendDateStr}] ${email.Subject}`;
 

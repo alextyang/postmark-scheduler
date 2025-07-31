@@ -6,9 +6,9 @@ export const TEST_AUTOMATION = '272';
 // SLACK
 
 // AIRTABLE
-export const READY_TO_SEND_STATUS = 'Ready';
-export const READY_TO_TEST_STATUS = 'Test';
-export const TESTED_STATUS = 'QA Review';
+export const READY_TO_SEND_STATUS = 'Ready to Send';
+export const READY_TO_TEST_STATUS = 'Needs Testing';
+export const TESTED_STATUS = 'Under QA Review';
 export const SENT_STATUS = 'Sent';
 
 // ACTIVECAMPAIGN
