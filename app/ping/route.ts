@@ -1,5 +1,5 @@
 import { getActiveContactsInAutomation, getAllContactVariables, getAutomationDetails, getTemplateDetails, listFields, parseTemplateContent } from '@/domain/actions/activecampaign';
-import { getEmailsThatNeedMetadataUpdate, getScheduledEmails, getTestEmails, markEmailAsSent, markEmailAsTested, saveMetadata } from '@/domain/actions/airtable';
+import { getEmailsThatAreWaitingOnReview, getEmailsThatNeedMetadataUpdate, getScheduledEmails, getTestEmails, markEmailAsSent, markEmailAsTested, saveMetadata } from '@/domain/actions/airtable';
 import { createBatchEmailArray, sendBatchEmail } from '@/domain/actions/postmark';
 import { sendSlackMessage } from '@/domain/actions/slack';
 import { sendError, tryAction } from '@/domain/error';
@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     await updateDisplayMetadata();
     await testEmails();
     await sendEmails();
+    await sendWarnings();
 
     isPending = false;
 
@@ -47,7 +48,7 @@ async function updateDisplayMetadata() {
             await saveMetadata(email['Airtable ID'], automationName, templateName);
         } catch (error: any) {
             console.error(`[METADATA] Failed to update metadata for email '${email['Email ID']}':`, error.message || error);
-            await sendError(`Failed to update metadata for email '${email['Email ID']}': ${error.message || error}`);
+            await sendError(`Failed to update metadata for email '${email['Email ID']}': \`${error.message || error}\``);
         }
     }
 }
@@ -118,7 +119,7 @@ async function testEmails() {
             console.log(`[TEST] Email '${email["Email ID"]}' processing completed.`);
         } catch (error: any) {
             console.error(`[TEST] Failed to send test email '${email["Email ID"]}':`, error.message || error);
-            await sendError(`Failed to send test email '${email["Email ID"]}': ${error.message || error}`);
+            await sendError(`Failed to send test email '${email["Email ID"]}': \`${error.message || error}\``);
         }
     }
 }
@@ -177,7 +178,27 @@ async function sendEmails() {
             console.log(`[SEND] Email '${email["Email ID"]}' processing completed.`);
         } catch (error: any) {
             console.error(`[SEND] Failed to send email '${email["Email ID"]}':`, error.message || error);
-            await sendError(`Failed to send email '${email["Email ID"]}': ${error.message || error}`);
+            await sendError(`Failed to send email '${email["Email ID"]}': \`${error.message || error}\``);
+        }
+    }
+}
+
+async function sendWarnings() {
+    console.log('\n\n\n\n');
+    const emails = await tryAction<Email[]>(getEmailsThatAreWaitingOnReview, 'Getting emails that are waiting on review');
+
+    if (emails.length === 0) {
+        console.log('[WARN] No emails waiting for review at this time.');
+        return;
+    }
+
+    for (const email of emails) {
+        try {
+            console.log(`[WARN] Email '${email["Email ID"]}' is waiting for review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
+            await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is waiting for review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
+        } catch (error: any) {
+            console.error(`[WARN] Failed to send warning for email '${email["Email ID"]}':`, error.message || error);
+            await sendError(`Failed to send warning for email '${email["Email ID"]}': \`${error.message || error}\``);
         }
     }
 }

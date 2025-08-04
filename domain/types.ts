@@ -16,6 +16,7 @@ export type Email = {
     "Subject": string;
     "Last Modified": string;
     "Sent At": string;
+    "Email Tag": string;
 }
 
 export type AirtableEmailItem = {
@@ -27,6 +28,7 @@ export type AirtableEmailItem = {
     "Subject": string;
     "Last Modified": string;
     "Sent At": string;
+    "Email Tag": string;
 }
 
 export type AirtableRecord<T> = {

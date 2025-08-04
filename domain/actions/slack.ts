@@ -1,6 +1,7 @@
 import { SlackPayload } from "../types";
 
 const WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+const WARN_WEBHOOK_URL = process.env.SLACK_WARN_WEBHOOK_URL;
 
 export async function sendSlackMessage(message: string): Promise<void> {
     if (!WEBHOOK_URL) {

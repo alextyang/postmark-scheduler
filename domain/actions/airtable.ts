@@ -41,7 +41,7 @@ export async function markEmailAsSent(emailId: string): Promise<void> {
 
 export async function getEmailsThatNeedMetadataUpdate(): Promise<Email[]> {
     return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND({Status} != '${SENT_STATUS}', IS_AFTER({Email Last Modified}, {Metadata Last Populated}))`,
+        filterByFormula: `AND({Status} != '${SENT_STATUS}', OR(IS_AFTER({Email Last Modified}, {Metadata Last Populated}), {Metadata Last Populated} = BLANK()))`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,
@@ -53,4 +53,13 @@ export async function saveMetadata(emailId: string, automationName: string, temp
         "Automation Name": automationName,
         "Template Name": templateName
     });
+}
+
+export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
+    return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
+        filterByFormula: `AND({Status} != '${READY_TO_SEND_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute')))`,
+    })).map((record: AirtableRecord<AirtableEmailItem>) => ({
+        "Airtable ID": record.id,
+        ...record.fields,
+    }));
 }

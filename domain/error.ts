@@ -4,7 +4,7 @@ import { ERROR_DELAY_SEC } from "./settings";
 
 export async function sendError(description: string): Promise<void> {
     console.log(`[ERROR] ${description}`);
-    await sendSlackMessage(`Error: ${description}\nRetrying in ${ERROR_DELAY_SEC} seconds...`);
+    await sendSlackMessage(`⛔️ Error: ${description}. Retrying in ${ERROR_DELAY_SEC} seconds...`);
 }
 
 export async function tryAction<T>(action: () => Promise<T>, actionDescription: string, tryNumber: number = 0): Promise<T> {
@@ -16,12 +16,12 @@ export async function tryAction<T>(action: () => Promise<T>, actionDescription: 
 
         if (tryNumber >= ERROR_DELAY_SEC.length - 1) {
             console.error(`[ERROR] Max retries reached for action: ${actionDescription}. Skipping.`);
-            await sendError(`Max retries reached for action: ${actionDescription}`);
+            await sendError(`⛔️ Max retries reached for action: ${actionDescription}`);
             throw new Error(`Max retries reached for action: ${actionDescription}`);
         }
 
         const delay = ERROR_DELAY_SEC[tryNumber];
-        sendSlackMessage(`Error during ${actionDescription}: ${error.message || error}\nRetrying in ${delay} seconds...`);
+        sendSlackMessage(`⛔️ ${actionDescription}: \`${error.message || error}\`. Retrying in ${delay} seconds...`);
         await new Promise(resolve => setTimeout(resolve, delay * 1000)); // Retry delay
         return tryAction(action, actionDescription, tryNumber + 1);
     }

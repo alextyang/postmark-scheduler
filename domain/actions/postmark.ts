@@ -20,6 +20,9 @@ export async function createBatchEmailArray(recipients: ShortenedContact[], emai
             HtmlBody: fillContentVariables(htmlContent, variableSet),
             TextBody: '',
             MessageStream: MESSAGE_STREAM,
+            Tag: email["Email Tag"],
+            "TrackOpens": true,
+            "TrackLinks": "HtmlAndText",
         }
     });
 }
