@@ -185,17 +185,17 @@ async function sendEmails() {
 
 async function sendWarnings() {
     console.log('\n\n\n\n');
-    const emails = await tryAction<Email[]>(getEmailsThatAreWaitingOnReview, 'Getting emails that are waiting on review');
+    const emails = await tryAction<Email[]>(getEmailsThatAreWaitingOnReview, 'Getting emails that are behind on review');
 
     if (emails.length === 0) {
-        console.log('[WARN] No emails waiting for review at this time.');
+        console.log('[WARN] No emails behind on review at this time.');
         return;
     }
 
     for (const email of emails) {
         try {
-            console.log(`[WARN] Email '${email["Email ID"]}' is waiting for review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
-            await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is waiting for review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
+            console.log(`[WARN] Email '${email["Email ID"]}' is behind on review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
+            await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is behind on review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
         } catch (error: any) {
             console.error(`[WARN] Failed to send warning for email '${email["Email ID"]}':`, error.message || error);
             await sendError(`Failed to send warning for email '${email["Email ID"]}': \`${error.message || error}\``);
