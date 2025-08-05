@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 async function updateDisplayMetadata() {
     console.log('\n\n\n\n');
-    const emails = await tryAction<Email[]>(getEmailsThatNeedMetadataUpdate, 'Checking for emails that need new display data');
+    const emails = await tryAction<Email[]>(getEmailsThatNeedMetadataUpdate, 'Checking for emails that need new display data', false);
 
     if (emails.length === 0)
         return;
@@ -38,9 +38,9 @@ async function updateDisplayMetadata() {
         try {
             console.log('\n\n[METADATA] Updating metadata for ' + email['Email ID']);
 
-            const automation = await tryAction<Automation>(() => getAutomationDetails(email["Automation ID"]), 'Getting automation details');
+            const automation = await tryAction<Automation>(() => getAutomationDetails(email["Automation ID"]), 'Getting automation details', false);
 
-            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details');
+            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details', false);
 
             const automationName = automation.name;
             const templateName = template.name;
@@ -48,7 +48,7 @@ async function updateDisplayMetadata() {
             await saveMetadata(email['Airtable ID'], automationName, templateName);
         } catch (error: any) {
             console.error(`[METADATA] Failed to update metadata for email '${email['Email ID']}':`, error.message || error);
-            await sendError(`Failed to update metadata for email '${email['Email ID']}': \`${error.message || error}\``);
+            // await sendError(`Failed to update metadata for email '${email['Email ID']}': \`${error.message || error}\``);
         }
     }
 }
@@ -56,14 +56,14 @@ async function updateDisplayMetadata() {
 
 async function testEmails() {
     console.log('\n\n\n\n');
-    const emails = await tryAction<Email[]>(getTestEmails, 'Getting the list of ready-to-test emails');
+    const emails = await tryAction<Email[]>(getTestEmails, 'Getting the list of ready-to-test emails', false);
 
     if (emails.length === 0) {
         console.log('[TEST] No emails to test at this time.');
         return;
     }
 
-    const fields = await tryAction(() => listFields(), 'Listing ActiveCampaign fields');
+    const fields = await tryAction(() => listFields(), 'Listing ActiveCampaign fields', false);
     console.log(`[TEST] Found ${fields.length} ActiveCampaign fields.`);
 
     for (const email of emails) {
@@ -83,26 +83,26 @@ async function testEmails() {
 
             email.Subject = `TEST: [${sendDateStr}] ${email.Subject}`;
 
-            const automation = await tryAction<Automation>(() => getAutomationDetails(TEST_AUTOMATION), 'Getting automation details');
+            const automation = await tryAction<Automation>(() => getAutomationDetails(TEST_AUTOMATION), 'Getting automation details', false);
 
-            const automationContacts = await tryAction(() => getActiveContactsInAutomation(TEST_AUTOMATION), 'Getting active contacts for automation');
+            const automationContacts = await tryAction(() => getActiveContactsInAutomation(TEST_AUTOMATION), 'Getting active contacts for automation', false);
 
             if (automationContacts.length === 0) {
                 await sendError(`No active contacts found in automation '${automation.name}'.`);
                 continue;
             }
 
-            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details');
+            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details', false);
 
-            let emailContent = await tryAction(() => parseTemplateContent(template), 'Parsing template content');
+            let emailContent = await tryAction(() => parseTemplateContent(template), 'Parsing template content', false);
 
             console.log(`[TEST] Got HTML content for email '${email["Email ID"]}': ${emailContent.length} characters`);
 
-            const variables = await tryAction(() => getAllContactVariables(automationContacts, fields), 'Getting all contact variables');
+            const variables = await tryAction(() => getAllContactVariables(automationContacts, fields), 'Getting all contact variables', false);
 
-            const emailArray = await tryAction<PostmarkEmail[]>(() => createBatchEmailArray(automationContacts, email, emailContent, variables), 'Formatting batch email array');
+            const emailArray = await tryAction<PostmarkEmail[]>(() => createBatchEmailArray(automationContacts, email, emailContent, variables), 'Formatting batch email array', false);
 
-            const sendResult = await tryAction<EmailSendResponse[]>(() => sendBatchEmail(emailArray), 'Sending email with Postmark');
+            const sendResult = await tryAction<EmailSendResponse[]>(() => sendBatchEmail(emailArray), 'Sending email with Postmark', false);
 
             const successfulSends = sendResult.filter(result => result.ErrorCode === 0);
             console.log(`[TEST] Email '${email["Email ID"]}' sent successfully to ${successfulSends.length}/${automationContacts.length} recipients.`);
@@ -114,52 +114,52 @@ async function testEmails() {
                 console.error(`[TEST] Errors occurred while testing email '${email["Email ID"]}':\n${errorMessages}`);
             }
 
-            await tryAction(() => markEmailAsTested(email["Airtable ID"]), `Marking email '${email["Email ID"]}' as tested in Airtable`);
+            await tryAction(() => markEmailAsTested(email["Airtable ID"]), `Marking email '${email["Email ID"]}' as tested in Airtable`, false);
 
             console.log(`[TEST] Email '${email["Email ID"]}' processing completed.`);
         } catch (error: any) {
             console.error(`[TEST] Failed to send test email '${email["Email ID"]}':`, error.message || error);
-            await sendError(`Failed to send test email '${email["Email ID"]}': \`${error.message || error}\``);
+            // await sendError(`Failed to send test email '${email["Email ID"]}': \`${error.message || error}\``);
         }
     }
 }
 
 async function sendEmails() {
     console.log('\n\n\n\n');
-    const emails = await tryAction<Email[]>(getScheduledEmails, 'Getting the list of ready-to-send emails');
+    const emails = await tryAction<Email[]>(getScheduledEmails, 'Getting the list of ready-to-send emails', true);
 
     if (emails.length === 0) {
         console.log('[SEND] No emails to send at this time.');
         return NextResponse.json({ message: 'No emails to send.' }, { status: 200 });
     }
 
-    const fields = await tryAction(() => listFields(), 'Listing ActiveCampaign fields');
+    const fields = await tryAction(() => listFields(), 'Listing ActiveCampaign fields', true);
     console.log(`[SEND] Found ${fields.length} ActiveCampaign fields.`);
 
     for (const email of emails) {
         try {
             console.log(`\n\n[SEND] Sending email '${email["Email ID"]}'. \nSubject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
 
-            const automation = await tryAction<Automation>(() => getAutomationDetails(email["Automation ID"]), 'Getting automation details');
+            const automation = await tryAction<Automation>(() => getAutomationDetails(email["Automation ID"]), 'Getting automation details', true);
 
-            const automationContacts = await tryAction(() => getActiveContactsInAutomation(email["Automation ID"]), 'Getting active contacts for automation');
+            const automationContacts = await tryAction(() => getActiveContactsInAutomation(email["Automation ID"]), 'Getting active contacts for automation', true);
 
             if (automationContacts.length === 0) {
                 await sendError(`No active contacts found in automation '${automation.name}'.`);
                 continue;
             }
 
-            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details');
+            const template = await tryAction<Template>(() => getTemplateDetails(email["Template ID"]), 'Getting template details', true);
 
-            let emailContent = await tryAction(() => parseTemplateContent(template), 'Parsing template content');
+            let emailContent = await tryAction(() => parseTemplateContent(template), 'Parsing template content', true);
 
             console.log(`[SEND] Got HTML content for email '${email["Email ID"]}': ${emailContent.length} characters`);
 
-            const variables = await tryAction(() => getAllContactVariables(automationContacts, fields), 'Getting all contact variables');
+            const variables = await tryAction(() => getAllContactVariables(automationContacts, fields), 'Getting all contact variables', true);
 
-            const emailArray = await tryAction<PostmarkEmail[]>(() => createBatchEmailArray(automationContacts, email, emailContent, variables), 'Formatting batch email array');
+            const emailArray = await tryAction<PostmarkEmail[]>(() => createBatchEmailArray(automationContacts, email, emailContent, variables), 'Formatting batch email array', true);
 
-            const sendResult = await tryAction<EmailSendResponse[]>(() => sendBatchEmail(emailArray), 'Sending email with Postmark');
+            const sendResult = await tryAction<EmailSendResponse[]>(() => sendBatchEmail(emailArray), 'Sending email with Postmark', true);
 
             const successfulSends = sendResult.filter(result => result.ErrorCode === 0);
             console.log(`[SEND] Email '${email["Email ID"]}' sent successfully to ${successfulSends.length}/${automationContacts.length} recipients.`);
@@ -171,7 +171,7 @@ async function sendEmails() {
                 console.error(`[SEND] Errors occurred while sending email '${email["Email ID"]}':\n${errorMessages}`);
             }
 
-            await tryAction(() => markEmailAsSent(email["Airtable ID"]), `Marking email '${email["Email ID"]}' as sent in Airtable`);
+            await tryAction(() => markEmailAsSent(email["Airtable ID"]), `Marking email '${email["Email ID"]}' as sent in Airtable`, true);
 
             sendSlackMessage(`Email '${email["Email ID"]}' successfully sent to ${sendResult.length}/${automationContacts.length} recipients in '${automation.name}'.${erroredSends.length > 0 ? `\n${erroredSends.length} sends had errors.` : ''}`);
 
@@ -185,7 +185,7 @@ async function sendEmails() {
 
 async function sendWarnings() {
     console.log('\n\n\n\n');
-    const emails = await tryAction<Email[]>(getEmailsThatAreWaitingOnReview, 'Getting emails that are behind on review');
+    const emails = await tryAction<Email[]>(getEmailsThatAreWaitingOnReview, 'Getting emails that are behind on review', false);
 
     if (emails.length === 0) {
         console.log('[WARN] No emails behind on review at this time.');
@@ -198,7 +198,7 @@ async function sendWarnings() {
             await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is behind on review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
         } catch (error: any) {
             console.error(`[WARN] Failed to send warning for email '${email["Email ID"]}':`, error.message || error);
-            await sendError(`Failed to send warning for email '${email["Email ID"]}': \`${error.message || error}\``);
+            // await sendError(`Failed to send warning for email '${email["Email ID"]}': \`${error.message || error}\``);
         }
     }
 }

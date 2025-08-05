@@ -7,12 +7,16 @@ export async function sendError(description: string): Promise<void> {
     await sendSlackMessage(`⛔️ Error: ${description}. Retrying in ${ERROR_DELAY_SEC} seconds...`);
 }
 
-export async function tryAction<T>(action: () => Promise<T>, actionDescription: string, tryNumber: number = 0): Promise<T> {
+export async function tryAction<T>(action: () => Promise<T>, actionDescription: string, tryHard: boolean, tryNumber: number = 0): Promise<T> {
     try {
         console.log(`[ACTION] ${actionDescription}...`);
         return await action();
     } catch (error: any) {
         console.log(`[ERROR] ${actionDescription} failed:`, error.message || error);
+
+        if (!tryHard) {
+            throw new Error(`Couldn't ${actionDescription}. Error: ${error.message || error}`);
+        }
 
         if (tryNumber >= ERROR_DELAY_SEC.length - 1) {
             console.error(`[ERROR] Max retries reached for action: ${actionDescription}. Skipping.`);
@@ -23,6 +27,6 @@ export async function tryAction<T>(action: () => Promise<T>, actionDescription: 
         const delay = ERROR_DELAY_SEC[tryNumber];
         sendSlackMessage(`⛔️ ${actionDescription}: \`${error.message || error}\`. Retrying in ${delay} seconds...`);
         await new Promise(resolve => setTimeout(resolve, delay * 1000)); // Retry delay
-        return tryAction(action, actionDescription, tryNumber + 1);
+        return tryAction(action, actionDescription, true, tryNumber + 1);
     }
 }
