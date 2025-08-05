@@ -1,5 +1,5 @@
 import { fetchAllAirtableRecords, updateAirtableRecord } from "../api/airtable";
-import { READY_TO_SEND_STATUS, READY_TO_TEST_STATUS, SENT_STATUS, TESTED_STATUS } from "../settings";
+import { DRAFT_STATUS, READY_TO_SEND_STATUS, READY_TO_TEST_STATUS, SENT_STATUS, TESTED_STATUS } from "../settings";
 import { AirtableEmailItem, AirtableRecord, Email } from "../types";
 
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || '';
@@ -41,7 +41,7 @@ export async function markEmailAsSent(emailId: string): Promise<void> {
 
 export async function getEmailsThatNeedMetadataUpdate(): Promise<Email[]> {
     return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND({Status} != '${SENT_STATUS}', OR(IS_AFTER({Email Last Modified}, {Metadata Last Populated}), {Metadata Last Populated} = BLANK()))`,
+        filterByFormula: `AND({Status} != '${DRAFT_STATUS}', AND({Status} != '${SENT_STATUS}', OR(IS_AFTER({Email Last Modified}, {Metadata Last Populated}), {Metadata Last Populated} = BLANK())))`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,

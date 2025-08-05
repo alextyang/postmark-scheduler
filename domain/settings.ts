@@ -10,6 +10,7 @@ export const READY_TO_SEND_STATUS = 'Ready to Send';
 export const READY_TO_TEST_STATUS = 'Needs Testing';
 export const TESTED_STATUS = 'Under QA Review';
 export const SENT_STATUS = 'Sent';
+export const DRAFT_STATUS = 'Draft';
 
 // ACTIVECAMPAIGN
 export const FETCH_DELAY_SEC = 1; // Delay between fetches to avoid hitting API limits
