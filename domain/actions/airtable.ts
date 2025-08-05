@@ -57,7 +57,7 @@ export async function saveMetadata(emailId: string, automationName: string, temp
 
 export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
     return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND({Status} != '${READY_TO_SEND_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute'))`,
+        filterByFormula: `AND({Status} = '${TESTED_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute'))`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,
