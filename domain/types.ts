@@ -29,6 +29,7 @@ export type AirtableEmailItem = {
     "Last Modified": string;
     "Sent At": string;
     "Email Tag": string;
+    "Warnings": string;
 }
 
 export type AirtableRecord<T> = {

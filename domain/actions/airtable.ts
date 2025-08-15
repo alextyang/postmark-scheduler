@@ -56,10 +56,18 @@ export async function saveMetadata(emailId: string, automationName: string, temp
 }
 
 export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
-    return (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND({Status} = '${TESTED_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute'))`,
+    const emails = (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
+        filterByFormula: `AND(AND({Status} = '${TESTED_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute')), NOT(REGEX_MATCH({Warnings}, "(^|, )Late QA(,|$)")))`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,
     }));
+
+    for (const email of emails) {
+        await updateAirtableRecord<any>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, email["Airtable ID"], {
+            "Warnings": email["Warnings"] ? email["Warnings"] + ", Late QA" : "Late QA",
+        });
+    }
+
+    return emails;
 }

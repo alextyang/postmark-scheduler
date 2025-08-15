@@ -195,7 +195,7 @@ async function sendWarnings() {
     for (const email of emails) {
         try {
             console.log(`[WARN] Email '${email["Email ID"]}' is behind on review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
-            await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is behind on review. Subject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
+            await sendSlackMessage(`⚠️ Email '${email["Email ID"]}' is behind on review. \nSubject: ${email.Subject} \nSchedule Date: ${email["Schedule Date"]}`);
         } catch (error: any) {
             console.error(`[WARN] Failed to send warning for email '${email["Email ID"]}':`, error.message || error);
             // await sendError(`Failed to send warning for email '${email["Email ID"]}': \`${error.message || error}\``);
