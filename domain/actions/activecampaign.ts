@@ -7,20 +7,12 @@ const API_KEY = process.env.ACTIVECAMPAIGN_API_KEY ?? '';
 // TEMPLATES
 
 export async function parseTemplateContent(template: Template): Promise<string> {
-    try {
-        // Attempt to parse the content as JSON
-        const parsed = JSON.parse(template.content);
-        if (parsed.html) {
-            // Remove AC footer.
-            const html = parsed.html.replace(/<table class="es-footer ac-footer[\s\S]*?<\/table>/gi, '');
-            console.log(html)
-            return html; // Return HTML content if available
-        }
-    } catch (error: any) {
-        console.log(`[ERROR] Failed to parse template content for ID ${template.userid}. Reverting to preview content. `, error);
-    }
+    let content = template.preview_content;
 
-    return template.preview_content; // Return preview content if available
+    // Remove AC footer.
+    content = content.replace(/<table class="es-footer ac-footer[\s\S]*?<\/table>/gi, '');
+
+    return content;
 }
 
 export async function getTemplateDetails(templateId: string): Promise<Template> {
