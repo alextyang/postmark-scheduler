@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 200 });
 }
 
-export async function testEmails() {
+async function testEmails() {
     console.log('\n\n\n\n');
     const emails = await tryAction<Email[]>(getTestEmails, 'Getting the list of ready-to-test emails', false);
 

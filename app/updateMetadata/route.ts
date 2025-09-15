@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 200 });
 }
 
-export async function updateDisplayMetadata() {
+async function updateDisplayMetadata() {
     console.log('\n\n\n\n');
     const emails = await tryAction<Email[]>(getEmailsThatNeedMetadataUpdate, 'Checking for emails that need new display data', false);
 

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 200 });
 }
 
-export async function sendWarnings() {
+async function sendWarnings() {
     console.log('\n\n\n\n');
 
     if (!lastWarned || (new Date().getTime() - lastWarned.getTime()) >= 2 * 60 * 60 * 1000) {

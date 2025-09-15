@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 200 });
 }
 
-export async function sendEmails() {
+async function sendEmails() {
     console.log('\n\n\n\n');
     const emails = await tryAction<Email[]>(getScheduledEmails, 'Getting the list of ready-to-send emails', true);
 
