@@ -24,9 +24,10 @@ export async function getTestEmails(): Promise<Email[]> {
     }));
 }
 
-export async function markEmailAsTested(emailId: string): Promise<void> {
+export async function markEmailAsTested(emailId: string, testNumber: number): Promise<void> {
     await updateAirtableRecord<any>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, emailId, {
         Status: TESTED_STATUS,
+        'Test Number': (testNumber || 0) + 1,
     });
 }
 
@@ -55,9 +56,10 @@ export async function saveMetadata(emailId: string, automationName: string, temp
     });
 }
 
-export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
+export async function checkForWarning(warningCondition: string, warningName: string): Promise<Email[]> {
+
     const emails = (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, {
-        filterByFormula: `AND(AND({Status} = '${TESTED_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute')), NOT(REGEX_MATCH({Warnings}, "(^|, )Late QA(,|$)")))`,
+        filterByFormula: `AND(${warningCondition}, NOT(REGEX_MATCH({Warnings}, "(^|, )${warningName}(,|$)")))`,
     })).map((record: AirtableRecord<AirtableEmailItem>) => ({
         "Airtable ID": record.id,
         ...record.fields,
@@ -65,9 +67,31 @@ export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
 
     for (const email of emails) {
         await updateAirtableRecord<any>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, email["Airtable ID"], {
-            "Warnings": email["Warnings"] ? email["Warnings"] + ", Late QA" : "Late QA",
+            "Warnings": email["Warnings"] ? email["Warnings"] + ", " + warningName : warningName,
         });
     }
 
     return emails;
+
+}
+
+export async function clearWarnings() {
+    const emails = (await fetchAllAirtableRecords<AirtableEmailItem>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID)).map((record: AirtableRecord<AirtableEmailItem>) => ({
+        "Airtable ID": record.id,
+        ...record.fields,
+    }));
+
+    for (const email of emails) {
+        await updateAirtableRecord<any>(AIRTABLE_BASE_ID, AIRTABLE_TABLE_ID, email["Airtable ID"], {
+            "Warnings": null,
+        });
+    }
+}
+
+export async function getEmailsThatAreWaitingOnReview(): Promise<Email[]> {
+    return checkForWarning(`AND({Status} = '${TESTED_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute'))`, 'Late QA');
+}
+
+export async function getEmailsThatAreWaitingOnSend(): Promise<Email[]> {
+    return checkForWarning(`AND({Status} = '${READY_TO_SEND_STATUS}', {Schedule Date} <= DATEADD(NOW(), 1, 'minute'))`, 'Late Send');
 }
