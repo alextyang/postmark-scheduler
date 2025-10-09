@@ -1,6 +1,6 @@
 
 
-export const ERROR_DELAY_SEC = [30, 60, 60 * 5, 60 * 15];
+export const ERROR_DELAY_SEC = [30, 60, 60 * 5, 60 * 5, 60 * 5, 60 * 5, 60 * 5];
 export const TEST_AUTOMATION = '272';
 
 // SLACK
