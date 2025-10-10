@@ -3,8 +3,8 @@
 The **Postmark Scheduler** adds **scheduled sending** to Postmark’s transactional email by orchestrating Airtable (jobs), ActiveCampaign (audiences & templates), and Postmark (delivery).  
 It personalizes content per contact, batches sends efficiently, and includes uptime safeguards and progressive retries suitable for production workloads.
 
-> – Built for reliability: idempotent workers, re-entrancy guards, progressive backoff, and external pingers  
-> – Human-friendly ops: auto-fills human-readable metadata, clear alerts, and manually-accessible job queue  
+– Built for reliability: idempotent workers, re-entrancy guards, progressive backoff, and external pingers  
+– Human-friendly ops: auto-fills human-readable metadata, clear alerts, and manually-accessible job queue  
 
 ## 🧭 Overview
 
@@ -162,7 +162,7 @@ cp .env.example .env.local
 ```bash
 npm run dev
 # then in another shell:
-curl -s http://localhost:3000/ping
+curl -s http://localhost:5555/ping
 ```
 
 ## 🔒 Security & Compliance
